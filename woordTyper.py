@@ -1,21 +1,30 @@
 from tkinter import *
+import time
 
 class WoordTyper(Frame):
     def __init__(self, words, bg="white", font=(lambda family="Commic Sans MS", size=50, style="bold": ("Commic Sans MS", 50, "bold")), master=None):
         super().__init__(master)
         self.master = master
         self.pack(fill=BOTH, expand=True)
-        self.position = 0
+        self.position = -1
         self.words = words
         self.background_color = bg
         self.font = font
         self.create_widgets()
         self.configure(background=self.background_color)
+        self.start_time = time.time()
+        self.update_timer()
+        self.next_word()
 
     def create_widgets(self):
+        self.progress = StringVar()
+        self.progress.set("0/0")
+        Label(self, textvariable=self.progress, fg="black", bg=self.background_color, font=self.font(size=20)).pack(pady=10, padx=20, anchor = 'e')
+
         wrapper = Frame(self)
         wrapper.pack(fill=X, expand=True)
         wrapper.configure(background=self.background_color)
+
         # Word to type
         self.title = StringVar()
         self.title.set(self.words[self.position])
@@ -29,6 +38,11 @@ class WoordTyper(Frame):
         self.input["textvariable"] = self.contents
         self.input.bind('<Key-Return>', self.handle_enter_pressed)
         self.input.bind('<KeyRelease>', self.handle_input_changed)
+
+        # Timer
+        self.timer = StringVar()
+        Label(self, textvariable=self.timer, fg="black", bg=self.background_color,
+              font=self.font(size=20)).pack(pady=10)
 
         self.quit = Button(self, text="STOP", bg=self.background_color, relief="groove", fg="red", font=self.font(size=20),
                               command=self.master.destroy)
@@ -47,10 +61,24 @@ class WoordTyper(Frame):
 
     def next_word(self):
         self.position += 1
-        if self.position == len(self.words):
+        if self.position >= len(self.words):
             self.contents.set("")
             self.input.configure(state="disabled")
             self.title.set("Goed gedaan!!")
         else:
             self.contents.set("")
             self.title.set(self.words[self.position])
+        self.progress.set("{}/{}".format(self.position, len(self.words)))
+
+    def update_timer(self):
+        if self.position >= len(self.words):
+            return
+        diff = int(time.time() - self.start_time)
+        s = str(diff % 60).zfill(2)
+        diff //= 60
+        m = str(diff % 60).zfill(2)
+        diff //= 60
+        h = str(diff).zfill(2)
+        self.timer.set("{}:{}:{}".format(h, m, s))
+        self.after(1000, self.update_timer)
+
