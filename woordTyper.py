@@ -2,9 +2,11 @@ from tkinter import *
 import time
 
 class WoordTyper(Frame):
-    def __init__(self, words, bg="white", font=(lambda family="Commic Sans MS", size=50, style="bold": ("Commic Sans MS", 50, "bold")), master=None):
+    def __init__(self, words, mode, amount, bg="white", font=(lambda family="Commic Sans MS", size=50, style="bold": ("Commic Sans MS", 50, "bold")), master=None):
         super().__init__(master)
         self.master = master
+        self.mode = mode
+        self.amount = amount
         self.pack(fill=BOTH, expand=True)
         self.position = -1
         self.words = words
@@ -53,7 +55,7 @@ class WoordTyper(Frame):
             self.input.configure(background=self.background_color)
 
     def handle_enter_pressed(self, event):
-        if self.contents.get().strip().lower() == self.words[self.position].lower():
+        if self.contents.get().strip().lower() == self.words[self.position%len(self.words)].lower():
             self.input.configure(background="green")
             self.next_word()
         else:
@@ -61,14 +63,21 @@ class WoordTyper(Frame):
 
     def next_word(self):
         self.position += 1
-        if self.position >= len(self.words):
+        if self.finished():
             self.contents.set("")
             self.input.configure(state="disabled")
             self.title.set("Goed gedaan!!")
         else:
             self.contents.set("")
-            self.title.set(self.words[self.position])
+            self.title.set(self.words[self.position % len(self.words)])
         self.progress.set("{}/{}".format(self.position, len(self.words)))
+
+    def finished(self):
+        if self.mode == 0:
+            return self.position >= self.amount
+        else:
+            diff = int(time.time() - self.start_time)
+            return diff//60 >= self.amount
 
     def update_timer(self):
         if self.position >= len(self.words):
